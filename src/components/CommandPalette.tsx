@@ -32,9 +32,11 @@ export function CommandPalette({ commands, onClose }: Props) {
     inputRef.current?.focus()
   }, [])
 
-  useEffect(() => {
+  const [lastQuery, setLastQuery] = useState(query)
+  if (query !== lastQuery) {
+    setLastQuery(query)
     setIndex(0)
-  }, [query])
+  }
 
   useEffect(() => {
     listRef.current?.children[index]?.scrollIntoView?.({ block: 'nearest' })

@@ -134,9 +134,9 @@ export function Header({ counts, theme, onToggleTheme, onOpenPalette }: Props) {
       </div>
 
       <div className="stats" role="status" aria-live="polite" aria-atomic="true">
-        <Stat label="Total tasks" value={counts.total} />
-        <Stat label="Completed" value={counts.completed} />
-        <Stat label="Pending" value={counts.pending} />
+        <Stat label="Total Tasks" value={counts.total} />
+        <Stat label="Completed Tasks" value={counts.completed} />
+        <Stat label="Pending Tasks" value={counts.pending} />
         <Stat label="Overdue" value={counts.overdue} tone={counts.overdue ? 'high' : undefined} />
       </div>
     </header>

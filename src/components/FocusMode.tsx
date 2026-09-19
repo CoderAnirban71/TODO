@@ -31,7 +31,7 @@ export function FocusMode({ task, onClose, onComplete }: Props) {
   const [left, setLeft] = useState(PRESETS[1].seconds)
   const [running, setRunning] = useState(true)
   const [finished, setFinished] = useState(false)
-  const endAt = useRef<number>(Date.now() + total * 1000)
+  const endAt = useRef<number>(0)
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {

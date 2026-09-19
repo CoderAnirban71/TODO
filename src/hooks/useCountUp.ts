@@ -8,11 +8,7 @@ export function useCountUp(target: number, duration = 600): number {
   const fromRef = useRef(target)
 
   useEffect(() => {
-    if (reduce) {
-      setValue(target)
-      fromRef.current = target
-      return
-    }
+    if (reduce) return
     const from = fromRef.current
     if (from === target) return
     const start = performance.now()
@@ -28,5 +24,5 @@ export function useCountUp(target: number, duration = 600): number {
     return () => cancelAnimationFrame(raf)
   }, [target, duration, reduce])
 
-  return value
+  return reduce ? target : value
 }

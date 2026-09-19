@@ -1,14 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, useReducedMotion } from 'motion/react'
-import confetti from 'canvas-confetti'
 import { Aurora } from './components/Aurora'
-import { BoardView } from './components/BoardView'
 import { BulkBar } from './components/BulkBar'
-import { CommandPalette, type Command } from './components/CommandPalette'
+import type { Command } from './components/CommandPalette'
 import { Composer, type ComposerHandle } from './components/Composer'
-import { FocusMode } from './components/FocusMode'
 import { Header } from './components/Header'
-import { ShortcutsHelp } from './components/ShortcutsHelp'
 import { TaskList } from './components/TaskList'
 import { Toast, type ToastData } from './components/Toast'
 import { Toolbar } from './components/Toolbar'
@@ -35,6 +31,12 @@ import { exportTasks, importTasks } from './lib/storage'
 import type { Priority, ViewMode } from './types'
 
 const isView = (v: unknown): v is ViewMode => v === 'list' || v === 'board'
+
+// Rarely-visited surfaces load on demand to keep the first paint light.
+const BoardView = lazy(() => import('./components/BoardView').then((m) => ({ default: m.BoardView })))
+const CommandPalette = lazy(() => import('./components/CommandPalette').then((m) => ({ default: m.CommandPalette })))
+const FocusMode = lazy(() => import('./components/FocusMode').then((m) => ({ default: m.FocusMode })))
+const ShortcutsHelp = lazy(() => import('./components/ShortcutsHelp').then((m) => ({ default: m.ShortcutsHelp })))
 
 export default function App() {
   const t = useTasks()
@@ -68,23 +70,22 @@ export default function App() {
   useEffect(() => {
     if (prevPending.current > 0 && counts.pending === 0 && counts.total > 0 && !reduce) {
       const colors = theme === 'dark' ? ['#f0595d', '#f0a232', '#41a893', '#e8eaee'] : ['#d93a3e', '#e0900f', '#2a8c7a', '#17191f']
-      const canvas = confettiRef.current
-      const fire = canvas ? confetti.create(canvas, { resize: true, useWorker: true }) : confetti
-      fire({ particleCount: 90, spread: 70, origin: { y: 0.3 }, colors })
-      window.setTimeout(() => fire({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0, y: 0.5 }, colors }), 200)
-      window.setTimeout(() => fire({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1, y: 0.5 }, colors }), 350)
+      void import('canvas-confetti').then(({ default: confetti }) => {
+        const canvas = confettiRef.current
+        const fire = canvas ? confetti.create(canvas, { resize: true, useWorker: true }) : confetti
+        fire({ particleCount: 90, spread: 70, origin: { y: 0.3 }, colors })
+        window.setTimeout(() => fire({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0, y: 0.5 }, colors }), 200)
+        window.setTimeout(() => fire({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1, y: 0.5 }, colors }), 350)
+      })
     }
     prevPending.current = counts.pending
   }, [counts.pending, counts.total, reduce, theme])
 
-  // Drop selection ids that no longer exist.
-  useEffect(() => {
-    setSelected((s) => {
-      const ids = new Set(t.tasks.map((x) => x.id))
-      const next = new Set([...s].filter((id) => ids.has(id)))
-      return next.size === s.size ? s : next
-    })
-  }, [t.tasks])
+  // Selection is stored as ids; only ids that still exist count.
+  const liveSelected = useMemo(() => {
+    const ids = new Set(t.tasks.map((x) => x.id))
+    return new Set([...selected].filter((id) => ids.has(id)))
+  }, [selected, t.tasks])
 
   const removeWithUndo = useCallback(
     (id: string) => {
@@ -222,7 +223,7 @@ export default function App() {
               totalCount={counts.total}
               filtered={isFiltered(filters)}
               manualOrder={filters.sort === 'manual'}
-              selected={selected}
+              selected={liveSelected}
               onReorder={t.reorderTasks}
               onClearFilters={() => setFilters({ ...DEFAULT_FILTERS, sort: filters.sort })}
               onToggle={t.toggleTask}
@@ -233,13 +234,15 @@ export default function App() {
               onTagClick={(tag) => setFilters((f) => ({ ...f, tag: f.tag === tag ? null : tag }))}
             />
           ) : (
-            <BoardView tasks={visible} onToggle={t.toggleTask} onRemove={removeWithUndo} onFocus={setFocusId} onSetPriority={setPriority} />
+            <Suspense fallback={<p className="list-footer-hint">Loading board…</p>}>
+              <BoardView tasks={visible} onToggle={t.toggleTask} onRemove={removeWithUndo} onFocus={setFocusId} onSetPriority={setPriority} />
+            </Suspense>
           )}
 
           {counts.total > 0 && view === 'list' && (
             <div className="list-footer">
               <p className="list-footer-hint">
-                {selected.size === 0 ? 'Ctrl + click a task to select several.' : `${selected.size} selected`}
+                {liveSelected.size === 0 ? 'Ctrl + click a task to select several.' : `${liveSelected.size} selected`}
               </p>
               {counts.completed > 0 && (
                 <button type="button" className="button button--ghost" onClick={() => commands.find((c) => c.id === 'clear-completed')?.run()}>
@@ -266,19 +269,19 @@ export default function App() {
       />
 
       <AnimatePresence>
-        {selected.size > 0 && (
+        {liveSelected.size > 0 && (
           <BulkBar
             key="bulk"
-            count={selected.size}
-            onComplete={() => { t.completeMany([...selected], true); setSelected(new Set()) }}
+            count={liveSelected.size}
+            onComplete={() => { t.completeMany([...liveSelected], true); setSelected(new Set()) }}
             onDelete={() => {
-              const ids = [...selected]
+              const ids = [...liveSelected]
               const removed = t.tasks.filter((x) => ids.includes(x.id))
               t.removeMany(ids)
               setSelected(new Set())
               showToast({ message: `Deleted ${ids.length} tasks`, actionLabel: 'Undo', onAction: () => removed.forEach(t.restoreTask) })
             }}
-            onPriority={(p) => t.setPriorityMany([...selected], p)}
+            onPriority={(p) => t.setPriorityMany([...liveSelected], p)}
             onClear={() => setSelected(new Set())}
           />
         )}
@@ -287,13 +290,15 @@ export default function App() {
       <Toast toast={toast} onDismiss={dismissToast} />
       <canvas ref={confettiRef} className="confetti-canvas" aria-hidden="true" />
 
-      <AnimatePresence>
-        {paletteOpen && <CommandPalette key="palette" commands={commands} onClose={() => setPaletteOpen(false)} />}
-        {helpOpen && <ShortcutsHelp key="help" onClose={() => setHelpOpen(false)} />}
-        {focusTask && (
-          <FocusMode key="focus" task={focusTask} onClose={() => setFocusId(null)} onComplete={(id) => t.updateTask(id, { completed: true, completedAt: Date.now() })} />
-        )}
-      </AnimatePresence>
+      <Suspense fallback={null}>
+        <AnimatePresence>
+          {paletteOpen && <CommandPalette key="palette" commands={commands} onClose={() => setPaletteOpen(false)} />}
+          {helpOpen && <ShortcutsHelp key="help" onClose={() => setHelpOpen(false)} />}
+          {focusTask && (
+            <FocusMode key="focus" task={focusTask} onClose={() => setFocusId(null)} onComplete={(id) => t.updateTask(id, { completed: true, completedAt: Date.now() })} />
+          )}
+        </AnimatePresence>
+      </Suspense>
     </LayoutGroup>
   )
 }
