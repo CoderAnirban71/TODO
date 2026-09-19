@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { parseQuickAdd } from '../lib/quickAdd'
-import { addDays, toISODate } from '../lib/dates'
+import { parseQuickAdd } from '../utils/quickAdd'
+import { addDays, toISODate } from '../utils/dates'
 
 describe('parseQuickAdd', () => {
   it('extracts priority, tags and due date from inline tokens', () => {

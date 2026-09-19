@@ -1,4 +1,4 @@
-import { dueStatus, formatDue } from '../lib/dates'
+import { dueStatus, formatDue } from '../utils/dates'
 import { IconCalendar } from './Icons'
 
 export function DueBadge({ date, completed = false }: { date: string; completed?: boolean }) {

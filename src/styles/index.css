@@ -2332,3 +2332,63 @@ kbd {
     animation: none;
   }
 }
+
+/* ---------- responsive breakpoints ---------- */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* phones */
+@media (max-width: 480px) {
+  .headline {
+    font-size: 32px;
+  }
+
+  .composer-input {
+    font-size: 20px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+}
+
+/* tablets */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app {
+    max-width: 680px;
+  }
+
+  .board {
+    gap: 10px;
+  }
+}
+
+/* laptops */
+@media (min-width: 1024px) {
+  .app {
+    padding-top: 64px;
+  }
+}
+
+/* large screens */
+@media (min-width: 1280px) {
+  .app:has(.board) {
+    max-width: 1180px;
+  }
+}
+
+/* short landscape phones */
+@media (orientation: landscape) and (max-height: 500px) {
+  .focus-dial,
+  .focus-dial svg {
+    width: 200px;
+    height: 200px;
+  }
+
+  .focus-clock {
+    font-size: 44px;
+  }
+}

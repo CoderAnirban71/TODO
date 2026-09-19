@@ -1,7 +1,7 @@
 import { forwardRef } from 'react'
 import { motion } from 'motion/react'
 import { PRIORITIES, PRIORITY_LABEL, SORT_LABEL, type PriorityFilter, type SortMode, type StatusFilter, type ViewMode } from '../types'
-import type { Counts, Filters } from '../lib/filter'
+import type { Counts, Filters } from '../utils/filter'
 import { TagChip } from './Badges'
 import { IconBoard, IconClose, IconList, IconSearch } from './Icons'
 

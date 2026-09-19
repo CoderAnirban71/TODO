@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import type { Counts } from '../lib/filter'
+import type { Counts } from '../utils/filter'
 import { useCountUp } from '../hooks/useCountUp'
 import { IconCommand, IconMoon, IconSun } from './Icons'
 

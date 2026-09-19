@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_FILTERS, countTasks, filterTasks } from '../lib/filter'
+import { DEFAULT_FILTERS, countTasks, filterTasks } from '../utils/filter'
 import type { Task } from '../types'
 
 const make = (over: Partial<Task>): Task => ({

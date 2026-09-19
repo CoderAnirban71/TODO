@@ -1,8 +1,8 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { Priority, TaskDraft } from '../types'
-import { parseQuickAdd } from '../lib/quickAdd'
-import { addDays, formatDue, toISODate, todayISO } from '../lib/dates'
+import { parseQuickAdd } from '../utils/quickAdd'
+import { addDays, formatDue, toISODate, todayISO } from '../utils/dates'
 import { PrioritySelect } from './PrioritySelect'
 import { IconCalendar, IconClose, IconNotes, IconTag } from './Icons'
 

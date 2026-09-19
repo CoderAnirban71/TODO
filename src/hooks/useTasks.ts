@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer } from 'react'
 import type { Priority, Task, TaskDraft } from '../types'
-import { createId } from '../lib/id'
-import { loadTasks, saveTasks } from '../lib/storage'
+import { createId } from '../utils/id'
+import { loadTasks, saveTasks } from '../services/storage'
 
 type Patch = Partial<Omit<Task, 'id' | 'createdAt'>>
 
